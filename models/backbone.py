@@ -80,10 +80,10 @@ class Unet(nn.Module):
             conv1_up = self.conv1_up(torch.cat([pre_conv[3], self.maxpool(conv4_down)], dim=1))  # H/8 x W/8 -> H/16 x W/16
         # print(conv4_down.shape)
         # print(self.deconv1(conv1_up).shape)
-        conv2_up = self.conv2_up(torch.cat([conv4_down, pad(conv4_down, self.deconv1(conv1_up))], dim=1))  # H/16 x W/16 -> H/8 x W/8
-        conv3_up = self.conv3_up(torch.cat([conv3_down, pad(conv3_down, self.deconv2(conv2_up))], dim=1))  # H/8 x W/8 -> H/4 x W/4
-        conv4_up = self.conv4_up(torch.cat([conv2_down, pad(conv2_down, self.deconv3(conv3_up))], dim=1))  # H/4 x W/4 -> H/2 x W/2
-        post_conv = self.post_conv(torch.cat([conv1_down, pad(conv1_down, self.deconv4(conv4_up))], dim=1))  # H/2 x W/2 -> H x W
+        conv2_up = self.conv2_up(torch.cat([conv4_down, self.deconv1(conv1_up)], dim=1))  # H/16 x W/16 -> H/8 x W/8
+        conv3_up = self.conv3_up(torch.cat([conv3_down, self.deconv2(conv2_up)], dim=1))  # H/8 x W/8 -> H/4 x W/4
+        conv4_up = self.conv4_up(torch.cat([conv2_down, self.deconv3(conv3_up)], dim=1))  # H/4 x W/4 -> H/2 x W/2
+        post_conv = self.post_conv(torch.cat([conv1_down, self.deconv4(conv4_up)], dim=1))  # H/2 x W/2 -> H x W
         return post_conv, conv4_up, conv3_up, conv2_up, conv1_up
 
 

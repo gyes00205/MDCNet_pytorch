@@ -28,7 +28,7 @@ parser.add_argument('--train_bsize', type=int, default=4,
                     help='batch size for training (default: 6)')
 parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for testing (default: 8)')
-parser.add_argument('--save_path', type=str, default='results/finetune_kitti2015_mdcnet_multi_scale',
+parser.add_argument('--save_path', type=str, default='results/finetune_kitti2015_mdcnet_multi_scale_warp_HR',
                     help='the path of saving checkpoints and log')
 parser.add_argument('--resume', type=str, default=None,
                     help='resume path')
@@ -213,7 +213,7 @@ def test(dataloader, model, log, epoch=0):
 
     info_str = ', '.join(['Stage {}={:.4f}'.format(x, D1s[x].avg) for x in range(stages)])
     for idx in range(stages):
-        writer.add_scalar(f'Val Epoch/fine map D1/stage {idx}', D1s[idx].avg, epoch)
+        writer.add_scalar(f'KITTIf{args.datatype} Val Epoch/fine map D1/stage {idx}', D1s[idx].avg, epoch)
     log.info('Average test 3-Pixel Error = ' + info_str)
     return D1s[-1].avg
 
