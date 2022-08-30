@@ -10,16 +10,17 @@ import time
 from dataloader import listflowfile as lt
 from dataloader import SecenFlowLoader as DA
 import utils.logger as logger
-from models.mdcnet import MDCNet
+from models.ablation_study.Unet import Unet
+from models.ablation_study.stackhourglass import stackhourglass
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser(description='MDCNet with Flyingthings3d')
 parser.add_argument('--maxdisp', type=int, default=192, help='maxium disparity')
+parser.add_argument('--model', type=str, default='Unet', help='model name')
 parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.5, 0.7, 1.])
-parser.add_argument('--map_loss_weights', type=float, nargs='+', default=[0.5, 2.])
-parser.add_argument('--datapath', default='/media/bsplab/TOSHIBA_2TB_HDD/SceneFlowData/',
+parser.add_argument('--datapath', default='/TOSHIBA_2TB_HDD/SceneFlowData/',
                     help='datapath')
 parser.add_argument('--epochs', type=int, default=24,
                     help='number of epochs to train')
@@ -27,7 +28,7 @@ parser.add_argument('--train_bsize', type=int, default=4,
                     help='batch size for training (default: 12)')
 parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for testing (default: 8)')
-parser.add_argument('--save_path', type=str, default='results/pretrained_mdcnet_warp_HR',
+parser.add_argument('--save_path', type=str, default='ablation_study/pretrained_only_2D_network',
                     help='the path of saving checkpoints and log')
 parser.add_argument('--resume', type=str, default=None,
                     help='resume path')
@@ -59,7 +60,13 @@ def main():
     for key, value in sorted(vars(args).items()):
         log.info(str(key) + ': ' + str(value))
 
-    model = MDCNet(args)
+    if args.model == 'Unet':
+        model = Unet(args)
+    elif args.model == 'stackhourglass':
+        model = stackhourglass(args)
+    else:
+        NotImplementedError
+
     model = nn.DataParallel(model).cuda()
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.999))
     log.info('Number of model parameters: {}'.format(sum([p.data.nelement() for p in model.parameters()])))
@@ -101,8 +108,7 @@ def main():
 def train(dataloader, model, optimizer, log, epoch=0):
 
     stages = 3
-    rough_losses = [AverageMeter() for _ in range(stages)]
-    fine_losses = [AverageMeter() for _ in range(stages)]
+    losses = [AverageMeter() for _ in range(stages)]
     length_loader = len(dataloader)
 
     model.train()
@@ -118,38 +124,27 @@ def train(dataloader, model, optimizer, log, epoch=0):
         if mask.float().sum() == 0:
             continue
         mask.detach_()
-        rough_outputs, fine_outputs = model(imgL, imgR)
-        rough_outputs = [torch.squeeze(output, 1) for output in rough_outputs]
-        fine_outputs = [torch.squeeze(output, 1) for output in fine_outputs]
-        rough_loss = [args.loss_weights[x] * F.smooth_l1_loss(rough_outputs[x][mask], disp_L[mask], reduction='mean')
+        outputs = model(imgL, imgR)
+        outputs = [torch.squeeze(output, 1) for output in outputs]
+        loss = [args.loss_weights[x] * F.smooth_l1_loss(outputs[x][mask], disp_L[mask], reduction='mean')
                 for x in range(stages)]
-        fine_loss = [args.loss_weights[x] * F.smooth_l1_loss(fine_outputs[x][mask], disp_L[mask], reduction='mean')
-                for x in range(stages)]
-        rough_total_loss = sum(rough_loss) * args.map_loss_weights[0]
-        fine_total_loss = sum(fine_loss) * args.map_loss_weights[1]
-        total_loss = rough_total_loss + fine_total_loss
-        total_loss.backward()
+
+        sum(loss).backward()
         optimizer.step()
 
         for idx in range(stages):
-            rough_losses[idx].update(rough_loss[idx].item()/args.loss_weights[idx])
-            writer.add_scalar(f'Train Step/rough loss/stage {idx}', rough_losses[idx].val, epoch*length_loader+batch_idx)
-        for idx in range(stages):
-            fine_losses[idx].update(fine_loss[idx].item()/args.loss_weights[idx])
-            writer.add_scalar(f'Train Step/fine loss/stage {idx}', fine_losses[idx].val, epoch*length_loader+batch_idx)
+            losses[idx].update(loss[idx].item()/args.loss_weights[idx])
+            writer.add_scalar(f'Train Step/loss/stage {idx}', losses[idx].val, epoch*length_loader+batch_idx)
 
     for idx in range(stages):
-        writer.add_scalar(f'Train Epoch/rough loss/stage {idx}', rough_losses[idx].avg, epoch)
-    for idx in range(stages):
-        writer.add_scalar(f'Train Epoch/fine loss/stage {idx}', fine_losses[idx].avg, epoch)
+        writer.add_scalar(f'Train Epoch/loss/stage {idx}', losses[idx].avg, epoch)
 
 
 
 def test(dataloader, model, log, epoch=0):
 
     stages = 3
-    fine_EPEs = [AverageMeter() for _ in range(stages)]
-    rough_EPEs = [AverageMeter() for _ in range(stages)]
+    EPEs = [AverageMeter() for _ in range(stages)]
     length_loader = len(dataloader)
 
     model.eval()
@@ -175,32 +170,28 @@ def test(dataloader, model, log, epoch=0):
 
         mask = disp_L < args.maxdisp
         with torch.no_grad():
-            rough_outputs, fine_outputs = model(imgL, imgR)
+            outputs = model(imgL, imgR)
             for x in range(stages):
                 if len(disp_L[mask]) == 0:
-                    fine_EPEs[x].update(0)
+                    EPEs[x].update(0)
                     continue
-                fine_output = torch.squeeze(fine_outputs[x], 1)
-                rough_output = torch.squeeze(rough_outputs[x], 1)
+                output = torch.squeeze(outputs[x], 1)
                 if top_pad != 0:
-                    fine_output = fine_output[:, top_pad:, :]
-                    rough_output = rough_output[:, top_pad:, :]
+                    output = output[:, top_pad:, :]
                 if right_pad != 0:
-                    fine_output = fine_output[:, :, :-right_pad]
-                    rough_output = rough_output[:, :, :-right_pad]
-                fine_EPEs[x].update((fine_output[mask] - disp_L[mask]).abs().mean())
-                rough_EPEs[x].update((rough_output[mask] - disp_L[mask]).abs().mean())
+                    output = output[:, :, :-right_pad]
+                EPEs[x].update((output[mask] - disp_L[mask]).abs().mean())
 
-        info_str = '\t'.join(['Stage {} = {:.2f}({:.2f})'.format(2, fine_EPEs[2].val, fine_EPEs[2].avg)])
+        info_str = '\t'.join(['Stage {} = {:.2f}({:.2f})'.format(2, EPEs[2].val, EPEs[2].avg)])
 
         log.info('[{}/{}] {}'.format(
             batch_idx, length_loader, info_str))
 
     for idx in range(stages):
-        writer.add_scalar(f'Val Epoch/fine map EPE/stage {idx}', fine_EPEs[idx].avg, epoch)
-        writer.add_scalar(f'Val Epoch/rough map EPE/stage {idx}', rough_EPEs[idx].avg, epoch)
-    info_str = ', '.join(['Stage {}={:.2f}'.format(x, fine_EPEs[x].avg) for x in range(stages)])
+        writer.add_scalar(f'Val Epoch/EPE/stage {idx}', EPEs[idx].avg, epoch)
+    info_str = ', '.join(['Stage {}={:.2f}'.format(x, EPEs[x].avg) for x in range(stages)])
     log.info('Average test EPE = ' + info_str)
+
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

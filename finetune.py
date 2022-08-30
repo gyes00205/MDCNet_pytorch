@@ -149,7 +149,7 @@ def train(dataloader, model, optimizer, log, epoch=0):
         num_out = len(outputs)
 
         outputs = [torch.squeeze(output, 1) for output in outputs]
-        loss = [args.loss_weights[x] * F.smooth_l1_loss(outputs[x][mask], disp_L[mask], size_average=True)
+        loss = [args.loss_weights[x] * F.smooth_l1_loss(outputs[x][mask], disp_L[mask], reduction='mean')
                 for x in range(num_out)]
         sum(loss).backward()
         optimizer.step()
@@ -167,13 +167,14 @@ def train(dataloader, model, optimizer, log, epoch=0):
     info_str = '\t'.join(['Stage {} = {:.2f}'.format(x, losses[x].avg) for x in range(stages)])
     log.info('Average train loss = ' + info_str)
     for idx in range(stages):
-        writer.add_scalar(f'Train Epoch/fine loss/stage {idx}', losses[idx].avg, epoch)
+        writer.add_scalar(f'KITTI{args.datatype} Train Epoch/fine loss/stage {idx}', losses[idx].avg, epoch)
 
 
 def test(dataloader, model, log, epoch=0):
 
     stages = 3
-    D1s = [AverageMeter() for _ in range(stages)]
+    fine_D1s = [AverageMeter() for _ in range(stages)]
+    rough_D1s = [AverageMeter() for _ in range(stages)]
     length_loader = len(dataloader)
 
     model.eval()
@@ -197,25 +198,29 @@ def test(dataloader, model, log, epoch=0):
         imgR = F.pad(imgR, (0, right_pad, top_pad, 0))
 
         with torch.no_grad():
-            _, outputs = model(imgL, imgR)
+            rough_outputs, fine_outputs = model(imgL, imgR)
             for x in range(stages):
-                output = torch.squeeze(outputs[x], 1)
+                fine_output = torch.squeeze(fine_outputs[x], 1)
+                rough_output = torch.squeeze(rough_outputs[x], 1)
                 if top_pad != 0:
-                    output = output[:, top_pad:, :]
+                    fine_output = fine_output[:, top_pad:, :]
+                    rough_output = rough_output[:, top_pad:, :]
                 if right_pad != 0:
-                    output = output[:, :, :-right_pad]
-                D1s[x].update(error_estimating(output, disp_L).item())
+                    fine_output = fine_output[:, :, :-right_pad]
+                    rough_output = rough_output[:, :, :-right_pad]
+                fine_D1s[x].update(error_estimating(fine_output, disp_L).item())
+                rough_D1s[x].update(error_estimating(rough_output, disp_L).item())
 
-        info_str = '\t'.join(['Stage {} = {:.4f}({:.4f})'.format(x, D1s[x].val, D1s[x].avg) for x in range(stages)])
-
-        log.info('[{}/{}] {}'.format(
-            batch_idx, length_loader, info_str))
-
-    info_str = ', '.join(['Stage {}={:.4f}'.format(x, D1s[x].avg) for x in range(stages)])
     for idx in range(stages):
-        writer.add_scalar(f'KITTIf{args.datatype} Val Epoch/fine map D1/stage {idx}', D1s[idx].avg, epoch)
-    log.info('Average test 3-Pixel Error = ' + info_str)
-    return D1s[-1].avg
+        writer.add_scalar(f'KITTI{args.datatype} Val Epoch/fine map D1/stage {idx}', fine_D1s[idx].avg, epoch)
+        writer.add_scalar(f'KITTI{args.datatype} Val Epoch/rough map D1/stage {idx}', rough_D1s[idx].avg, epoch)
+    
+    info_str = ', '.join(['Stage {}={:.4f}'.format(x, fine_D1s[x].avg) for x in range(stages)])
+    log.info('Average test 3-Pixel Error of fine map = ' + info_str)
+    info_str = ', '.join(['Stage {}={:.4f}'.format(x, rough_D1s[x].avg) for x in range(stages)])
+    log.info('Average test 3-Pixel Error of rough map = ' + info_str)
+
+    return fine_D1s[-1].avg
 
 
 def error_estimating(disp, ground_truth, maxdisp=192):
@@ -227,6 +232,7 @@ def error_estimating(disp, ground_truth, maxdisp=192):
     err3 = ((errmap[mask] > 3.) & (errmap[mask] / gt[mask] > 0.05)).sum()
     return err3.float() / mask.sum().float()
 
+
 def adjust_learning_rate(optimizer, epoch):
     if epoch <= 200:
         lr = args.lr
@@ -236,6 +242,7 @@ def adjust_learning_rate(optimizer, epoch):
         lr = args.lr * 0.01
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -254,6 +261,7 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
 
 if __name__ == '__main__':
     writer = SummaryWriter(args.save_path)

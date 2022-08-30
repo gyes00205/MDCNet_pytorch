@@ -61,6 +61,20 @@ def build_gwc_volume(refimg_fea, targetimg_fea, maxdisp, num_groups):
     return volume
 
 
+def build_concat_volume(refimg_fea, targetimg_fea, maxdisp):
+    B, C, H, W = refimg_fea.shape
+    volume = refimg_fea.new_zeros([B, 2 * C, maxdisp, H, W])
+    for i in range(maxdisp):
+        if i > 0:
+            volume[:, :C, i, :, i:] = refimg_fea[:, :, :, i:]
+            volume[:, C:, i, :, i:] = targetimg_fea[:, :, :, :-i]
+        else:
+            volume[:, :C, i, :, :] = refimg_fea
+            volume[:, C:, i, :, :] = targetimg_fea
+    volume = volume.contiguous()
+    return volume
+
+
 class disparityregression(nn.Module):
     def __init__(self, start, maxdisp):
         super(disparityregression, self).__init__()

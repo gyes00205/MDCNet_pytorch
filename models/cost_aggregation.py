@@ -173,7 +173,7 @@ class CostAggregation_2d(nn.Module):
             conv2d_bn(in_channels=maxdisp*2, out_channels=maxdisp, kernel_size=3, stride=1, padding=1),
         )
         self.deconv2 = deconv2d_bn(in_channels=maxdisp, out_channels=maxdisp, kernel_size=3, stride=2, padding=1, output_padding=1)
-        self.post_conv = nn.Conv2d(in_channels=maxdisp*2, out_channels=maxdisp, kernel_size=3, stride=1, padding=1, bias=False)
+        self.post_conv = conv2d_bn(in_channels=maxdisp*2, out_channels=maxdisp, kernel_size=3, stride=1, padding=1)
 
     def forward(self, x):
         B, D, H, W = x.shape

@@ -107,14 +107,11 @@ class MDCNet(nn.Module):
         ref_gwc_feat, target_gwc_feat = dict(), dict()
         ref_feat1, ref_feat2 = self.feature_extraction(ref)
         target_feat1, target_feat2 = self.feature_extraction(target)
-        # print(f'ref feat1 shape: {ref_feat1.shape}')
-        # print(f'ref feat2 shape: {ref_feat2.shape}')
 
         # Correlation layer
         ref_feat1, target_feat1 = self.pre_conv(ref_feat1), self.pre_conv(target_feat1)
         cost_volume_3d = build_gwc_volume(ref_feat1, target_feat1, maxdisp=self.maxdisp//3, num_groups=1)
         cost_volume_3d = cost_volume_3d.squeeze(1)  # [B, D/3, H/3, W/3]
-        # print(f'cost volume shape: {cost_volume_3d.shape}')
 
         # 2D disparity map generation
         # rough disparity [low(H/12 x H/12), mid(H/6 x H/6), high(H/3 x H/3)]
