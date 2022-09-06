@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description='MDCNet with Flyingthings3d')
 parser.add_argument('--maxdisp', type=int, default=192, help='maxium disparity')
 parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.5, 0.7, 1.])
 parser.add_argument('--map_loss_weights', type=float, nargs='+', default=[0.5, 2.])
-parser.add_argument('--datapath', default='/media/bsplab/TOSHIBA_2TB_HDD/SceneFlowData/',
+parser.add_argument('--datapath', default='/TOSHIBA_2TB_HDD/SceneFlowData/',
                     help='datapath')
 parser.add_argument('--epochs', type=int, default=24,
                     help='number of epochs to train')
