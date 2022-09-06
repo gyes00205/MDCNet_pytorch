@@ -14,9 +14,9 @@ Train on RTX 2080Ti
 
 | Matching Cost Computation | Cost Aggregation         | SceneFlow (EPE) | KITTI 2015 D1-all (%) | KITTI 2012 D1-all (%) | Time(s) |
 | ------------------------- | ------------------------ | --------------- | --------------------- | --------------------- | ------- |
-| Correlation               | Unet/2D                  | 1.647           | 3.93%                 |                       |         |
-| Concat                    | Hourglass/3D             | 1.417           | 2.13%                 |                       |         |
-| Correlation+Concat        | Unet/2D+DCU+Hourglass/3D | 1.351           | 3.29%                 |                       |         |
+| Correlation               | Unet/2D                  | 1.647           | 3.93%                 |                       | 0.043   |
+| Concat                    | Hourglass/3D             | 1.417           | 2.13%                 |                       | 0.243   |
+| Correlation+Concat        | Unet/2D+DCU+Hourglass/3D | 1.351           | 3.29%                 |                       | 0.073   |
 
 ## Acknowledgements
 In this implementation, I use parts of the implementations of the following works:
