@@ -8,7 +8,26 @@ Thanks for the amazing work of Wei Chen, Xiaogang Jia, Mingfei Wu, and Zhengfa L
 * [SceneFlow](http://www.cvlibs.net/datasets/kitti/eval_stereo.php)
 * [KITTI Stereo](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html)
 
-I follow the data preparation of [PSMNet](https://github.com/JiaRenChang/PSMNet/tree/master/dataset) to download the SceneFlow dataset. 
+I follow the data preparation of [PSMNet](https://github.com/JiaRenChang/PSMNet/tree/master/dataset) to download the SceneFlow dataset.
+* SceneFlow includes three datasets: flything3d, driving and monkaa.
+* You can train PSMNet with some of three datasets, or all of them.
+* the following is the describtion of six subfolder.
+```
+# the disp folder of Driving dataset
+driving_disparity  
+# the image folder of Driving dataset
+driving_frames_cleanpass
+
+# the disp folder of  Flything3D dataset
+frames_cleanpass  
+# the image folder of  Flything3D dataset
+frames_disparity  
+
+# the disp folder of Monkaa dataset
+monkaa_disparity  
+# the image folder of Monkaa dataset
+monkaa_frames_cleanpass
+```
 ## Ablation Study
 Train on RTX 2080Ti
 
