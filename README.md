@@ -1,19 +1,22 @@
 # MDCNet
 ###### tags: `MDCNet`
 ## Introduction
-The goal of this repo is to implement and reproduce the paper **Multi-Dimensional Cooperative Network for Stereo Matching** which published on ICRA 2022. Original paper could be found via the following links:
+Thanks for the amazing work of Wei Chen, Xiaogang Jia, Mingfei Wu, and Zhengfa Liang. The goal of this repo is to implement and reproduce the paper **Multi-Dimensional Cooperative Network for Stereo Matching** which published on ICRA 2022. Original paper could be found via the following links:
 * [Original paper](https://ieeexplore.ieee.org/document/9627805)
 
+## Dataset
+* [SceneFlow](http://www.cvlibs.net/datasets/kitti/eval_stereo.php)
+* [KITTI Stereo](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html)
+
+I follow the data preparation of [PSMNet](https://github.com/JiaRenChang/PSMNet/tree/master/dataset) to download the SceneFlow dataset. 
 ## Ablation Study
-Result on SceneFlow
+Train on RTX 2080Ti
 
-
-| Matching Cost Computation | Cost Aggregation | SceneFlow (EPE) | KITTI 2015 | KITTI 2012 | Time(s) |
-| ------------------------- | ---------------- | --------------- | ---------- | ---------- | ------- |
-| Correlation               | Unet/2D          | 1.647           | 3.93%      |            |         |
-| Concat                    | Hourglass/3D     | 1.417           | 2.13%      |            |         |
-|                           |                  |                 |            |            |         |
-|                           |                  |                 |            |            |         |
+| Matching Cost Computation | Cost Aggregation         | SceneFlow (EPE) | KITTI 2015 D1-all (%) | KITTI 2012 D1-all (%) | Time(s) |
+| ------------------------- | ------------------------ | --------------- | --------------------- | --------------------- | ------- |
+| Correlation               | Unet/2D                  | 1.647           | 3.93%                 |                       |         |
+| Concat                    | Hourglass/3D             | 1.417           | 2.13%                 |                       |         |
+| Correlation+Concat        | Unet/2D+DCU+Hourglass/3D | 1.351           | 3.29%                 |                       |         |
 
 ## Acknowledgements
 In this implementation, I use parts of the implementations of the following works:
