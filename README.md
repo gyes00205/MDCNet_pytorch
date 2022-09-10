@@ -1,6 +1,8 @@
 # MDCNet
 ###### tags: `MDCNet`
 ## Introduction
+![demo.gif animation](readme_images/demo.gif)
+
 Thanks for the amazing work of Wei Chen, Xiaogang Jia, Mingfei Wu, and Zhengfa Liang. The goal of this repo is to implement and reproduce the paper **Multi-Dimensional Cooperative Network for Stereo Matching** which published on ICRA 2022. Original paper could be found via the following links:
 * [Original paper](https://ieeexplore.ieee.org/document/9627805)
 
@@ -10,7 +12,7 @@ Thanks for the amazing work of Wei Chen, Xiaogang Jia, Mingfei Wu, and Zhengfa L
 
 I follow the data preparation of [PSMNet](https://github.com/JiaRenChang/PSMNet/tree/master/dataset) to download the SceneFlow dataset.
 * SceneFlow includes three datasets: flything3d, driving and monkaa.
-* You can train PSMNet with some of three datasets, or all of them.
+* You can train MDCNet with some of three datasets, or all of them.
 * the following is the describtion of six subfolder.
 ```
 # the disp folder of Driving dataset
