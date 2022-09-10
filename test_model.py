@@ -10,7 +10,7 @@ from models.mdcnet import MDCNet
 
 if __name__ == '__main__':
     device = 'cuda'
-    parser = argparse.ArgumentParser(description='AnyNet with Flyingthings3d')
+    parser = argparse.ArgumentParser(description='MDCNet with Flyingthings3d')
     parser.add_argument('--maxdisp', type=int, default=192, help='maxium disparity')
     args = parser.parse_args()
     input1 = torch.rand(1, 3, 240, 528, device=device)

@@ -14,7 +14,7 @@ from models.mdcnet import MDCNet
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
+parser = argparse.ArgumentParser(description='MDCNet fintune on KITTI')
 parser.add_argument('--maxdisp', type=int, default=192,
                     help='maxium disparity')
 parser.add_argument('--loss_weights', type=float, nargs='+', default=[0.5, 0.7, 1.])

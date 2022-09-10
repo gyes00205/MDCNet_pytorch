@@ -16,7 +16,7 @@ from tqdm import tqdm
 from models.ablation_study.Unet import Unet
 from models.ablation_study.stackhourglass import stackhourglass
 
-parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
+parser = argparse.ArgumentParser(description='MDCNet fintune on KITTI')
 parser.add_argument('--maxdisp', type=int, default=192,
                     help='maxium disparity')
 parser.add_argument('--model', type=str, default='Unet', help='model name')
