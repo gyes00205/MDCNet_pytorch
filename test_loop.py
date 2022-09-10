@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import time
 from tqdm import tqdm
 import torchvision.transforms as transforms
-import models.anynet
+from models.mdcnet import MDCNet
 from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
@@ -16,14 +16,13 @@ import imageio
 import numpy as np
 
 
-parser = argparse.ArgumentParser(description='Anynet fintune on KITTI')
+parser = argparse.ArgumentParser(description='MDCNet fintune on KITTI')
 parser.add_argument('--maxdisp', type=int, default=192,
                     help='maxium disparity')
 parser.add_argument('--datapath', default='/home/bsplab/Documents/dataset_kitti/train/2011_09_26_drive_0011_sync',
                     help='datapath')
-parser.add_argument('--with_refine', action='store_true', help='with refine')
 parser.add_argument('--output_dir', type=str, default='output', help='output dir')
-parser.add_argument('--loadmodel', type=str, default='results/finetune_anynet_refine/checkpoint.tar', help='checkpoint')
+parser.add_argument('--loadmodel', type=str, default='results/kitti15_mdcnet/checkpoint.tar', help='checkpoint')
 args = parser.parse_args()
 
 width_to_focal = dict()
@@ -34,7 +33,7 @@ width_to_focal[1238] = 718.3351
 
 filenames = sorted(os.listdir(os.path.join(args.datapath, 'RGB_left')))
 
-model = models.anynet.AnyNet(args)
+model = MDCNet(args)
 os.makedirs(args.output_dir, exist_ok=True)
 os.makedirs(os.path.join(args.output_dir, 'disp'), exist_ok=True)
 os.makedirs(os.path.join(args.output_dir, 'depth'), exist_ok=True)
@@ -42,7 +41,7 @@ model = nn.DataParallel(model).cuda()
 
 if args.loadmodel is not None:
     state_dict = torch.load(args.loadmodel)
-    model.load_state_dict(state_dict['state_dict'])
+    model.load_state_dict(state_dict['state_dict'], strict=False)
 
 print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in model.parameters()])))
 
@@ -53,7 +52,8 @@ def test(imgL,imgR):
     imgR = imgR.cuda()
 
     with torch.no_grad():
-        output = model(imgL,imgR)[-1]
+        _, outputs = model(imgL,imgR)
+        output = outputs[-1]  # high scale fine disparity 
     output = torch.squeeze(output).data.cpu().numpy()
     return output
 
@@ -78,16 +78,16 @@ def main():
         imgL = infer_transform(imgL_o)
         imgR = infer_transform(imgR_o)
 
-        # pad to width and hight to 16 times
-        if imgL.shape[1]%16 != 0:
-            times = imgL.shape[1] // 16
-            top_pad = (times+1)*16 - imgL.shape[1]
+        # pad to width and hight to 48 times
+        if imgL.shape[1]%48 != 0:
+            times = imgL.shape[1] // 48
+            top_pad = (times+1)*48 - imgL.shape[1]
         else:
             top_pad = 0
 
-        if imgL.shape[2] % 16 != 0:
-            times = imgL.shape[2] // 16
-            right_pad = (times+1)*16 - imgL.shape[2]
+        if imgL.shape[2] % 48 != 0:
+            times = imgL.shape[2] // 48
+            right_pad = (times+1)*48 - imgL.shape[2]
         else:
             right_pad = 0
 
