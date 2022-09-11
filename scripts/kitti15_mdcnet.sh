@@ -1,4 +1,4 @@
-python finetune_only_one_network.py \
+python finetune.py \
     --train_bsize 4 --test_bsize 1 --datatype 2015 \
     --datapath /home/bsplab/Documents/data_scene_flow_2015/training/ \
     --save_path results/kitti15_mdcnet \
