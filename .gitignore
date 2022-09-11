@@ -3,6 +3,8 @@ ablation_study/pretrained_only_2D_network
 ablation_study/pretrained_only_3D_network
 ablation_study/kitti15_only_2D
 ablation_study/kitti15_only_3D
+ablation_study/kitti12_only_2D
+ablation_study/kitti12_only_3D
 output
 # Byte-compiled / optimized / DLL files
 __pycache__/
