@@ -43,7 +43,7 @@ I finetune MDCNet on KITTI 2015 dataset for 300 epochs. Split 80% data for train
 bash scripts/kitti15_mdcnet.sh
 ```
 ### Finetune on KITTI 2012
-I finetune our model on KITTI 2012 dataset for 300 epochs. Split 80% data for training and 20% for validation.
+I finetune MDCNet on KITTI 2012 dataset for 300 epochs. Split 80% data for training and 20% for validation.
 ```
 bash scripts/kitti12_mdcnet.sh
 ```
