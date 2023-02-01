@@ -5,6 +5,7 @@
 
 Thanks for the amazing work of Wei Chen, Xiaogang Jia, Mingfei Wu, and Zhengfa Liang. The goal of this repo is to implement and reproduce the paper **Multi-Dimensional Cooperative Network for Stereo Matching** which published on ICRA 2022. Original paper could be found via the following links:
 * [Original paper](https://ieeexplore.ieee.org/document/9627805)
+* [Original repo](https://github.com/disco14/MDCNet)
 
 ## :floppy_disk: Dataset
 * [SceneFlow](http://www.cvlibs.net/datasets/kitti/eval_stereo.php)
